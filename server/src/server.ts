@@ -1,11 +1,15 @@
 import { App } from '@/app';
 import { AuthRoute } from '@routes/auth.route';
 import { UserRoute } from '@routes/users.route';
-import { GptRoute } from '@routes/gpt.route';
+import { EcgRoute } from './routes/ecg.route';
 import { ValidateEnv } from '@utils/validateEnv';
 
 ValidateEnv();
 
-const app = new App([new UserRoute(), new AuthRoute(), new GptRoute()]);
+try {
+  const app = new App([new UserRoute(), new AuthRoute(), new EcgRoute()]);
 
-app.listen();
+  app.listen();
+} catch (e) {
+  console.error(e);
+}
