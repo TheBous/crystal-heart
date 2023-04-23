@@ -29,14 +29,14 @@ export class EcgController {
     }
   };
 
-  // public getEcg = async (req: Request, res: Response, next: NextFunction) => {
-  //   try {
-  //     const { prompt } = req.body;
-  //     const ecgSave: any = await this.ecg.getEcg();
-  //     console.warn(ecgSave);
-  //     res.status(200).json({ data: ecgSave, message: 'Ecg saved' });
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // };
+  public getEcg = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id, page, limit } = req.query;
+      const data: any = await this.ecg.getEcg(id as string, { page: page as string, limit: limit as string });
+      console.warn(data);
+      res.status(200).json({ data, message: 'Ecg saved' });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
