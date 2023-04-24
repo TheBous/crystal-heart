@@ -5,6 +5,7 @@ const redirectToLogin = () => {
 
 const apiCall = async (url, { method = 'GET', body = null, headers = {}, includeCredentials = false, domain }) => {
     try {
+        if (!method) throw new Error("Method is required");
         let _domain = process.env.REACT_APP_BACKEND;
         if (domain) _domain = domain;
         const options = {
@@ -13,15 +14,14 @@ const apiCall = async (url, { method = 'GET', body = null, headers = {}, include
                 'Content-Type': 'application/json',
                 ...headers,
             },
-            body: body && !!Object.keys(body).length && JSON.stringify(body),
             credentials: includeCredentials ? 'include' : 'same-origin',
         };
 
+        if (body && !!Object.keys(body).length) options.body = JSON.stringify(body);
+
         const response = await fetch(`${_domain}/${url}`, options);
 
-        if (response.status === 401) {
-            redirectToLogin();
-        }
+        if (response.status === 401) redirectToLogin();
 
         if (!response.ok) {
             const error = await response.text();

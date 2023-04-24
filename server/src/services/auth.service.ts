@@ -15,7 +15,8 @@ const createToken = (userId: string): TokenData => {
   return { expiresIn, token: sign(dataStoredInToken, SECRET_KEY, { expiresIn }) };
 };
 
-const createCookie = (tokenData: TokenData): string => `Authorization=${tokenData.token}; HttpOnly; SameSite="Lax"; Max-Age=${tokenData.expiresIn};`;
+const createCookie = (tokenData: TokenData): string =>
+  `Authorization=${tokenData.token}; HttpOnly; SameSite="Lax"; Path=/; Max-Age=${tokenData.expiresIn};`;
 
 @Service()
 export class AuthService {

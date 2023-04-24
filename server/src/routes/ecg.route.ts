@@ -14,7 +14,7 @@ export class EcgRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}`, AuthMiddleware, this.ecg.getEcg);
+    this.router.get(`${this.path}/measurements`, AuthMiddleware, this.ecg.getEcg);
     this.router.post(`${this.path}/upload`, AuthMiddleware, this.ecg.uploadEcg);
   }
 }

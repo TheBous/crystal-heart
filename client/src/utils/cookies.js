@@ -7,6 +7,7 @@ export const getCookie = (name) => {
 };
 
 export const setCookie = (name, value, options = {}) => {
+    debugger;
     let cookie = name + '=' + value;
     if (options.expires) {
         const expires = options.expires.toUTCString();

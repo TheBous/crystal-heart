@@ -8,14 +8,14 @@ ChartJS.register(...registerables, zoomPlugin);
 
 const EcgChart = ({ ecgData = [] }) => {
     const labels = ecgData.map((data) => {
-        return data.ecg.Samples.map(() => {
-            return new Date(data.ecg.Timestamp).toISOString().substring(17, 22);
+        return data.samples.map(() => {
+            return new Date(data.timestamp).toISOString().substring(17, 22);
         });
     });
 
     const data = ecgData
         .map((data) => {
-            return data.ecg.Samples;
+            return data.samples;
         })
         .flat();
 
