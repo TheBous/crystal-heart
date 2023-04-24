@@ -17,11 +17,11 @@ export class EcgController {
     }
   };
 
-  public saveFakeEcg = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+  public uploadEcg = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       console.warn(req.user);
       const userId: string = req.user._id;
-      const ecgSave: any = await this.ecg.saveTestFakeEcg(userId);
+      const ecgSave: any = await this.ecg.uploadEcg(userId);
       console.warn(ecgSave);
       res.status(200).json({ data: ecgSave, message: 'Ecg saved' });
     } catch (error) {
@@ -32,8 +32,7 @@ export class EcgController {
   public getEcg = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id, page, limit } = req.query;
-      const data: any = await this.ecg.getEcg(id as string, { page: page as string, limit: limit as string });
-      console.warn(data);
+      const data = await this.ecg.getEcg(id as string, { page: page as string, limit: limit as string });
       res.status(200).json({ data, message: 'Ecg saved' });
     } catch (error) {
       next(error);

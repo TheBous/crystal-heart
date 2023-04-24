@@ -18,22 +18,23 @@ export class EcgService {
       const { page, limit } = config ?? {};
       const _page = parseInt(page);
       const _limit = parseInt(limit);
-      const measurements = await MeasurementModel.find({ ecg: id })
+      const filters = { ecg: id };
+      const measurements = await MeasurementModel.find(filters)
         .skip((_page - 1) * _limit)
         .limit(_limit)
         .sort({
           timestamp: 'asc',
         });
-      return measurements;
+      const totalElements = await MeasurementModel.countDocuments(filters);
+      return { measurements, total: totalElements };
     } catch (e: any) {
       console.warn(e);
       return [];
     }
   }
 
-  public async saveTestFakeEcg(userId: any): Promise<boolean> {
+  public async uploadEcg(userId: any): Promise<boolean> {
     try {
-      console.warn('Saving fake ECG');
       const formattedEcg = FakeEcg.data.map((item: any) => {
         return {
           timestamp: item.ecg.Timestamp,
