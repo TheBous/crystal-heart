@@ -4,6 +4,7 @@ import Stack from '@mui/material/Stack';
 
 import EcgChart from "../../components/EcgHeart/EcgHeart";
 import internalFetch from 'utils/fetch';
+import { Box } from "@mui/system";
 
 const limit = 100;
 
@@ -29,7 +30,9 @@ const ECG = () => {
 
     return (
         <div>
-            <EcgChart ecgData={measurements} />
+            <Box sx={{ p: 2 }}>
+                <EcgChart ecgData={measurements} />
+            </Box>
             <Stack spacing={2}>
                 <Pagination color="primary" count={total / limit} variant="outlined" onChange={handleChange} />
             </Stack>

@@ -178,7 +178,6 @@ const FirebaseRegister = ({ ...others }) => {
                         if (scriptedRef.current) {
                             setStatus({ success: true });
                             setSubmitting(false);
-                            console.warn(values);
                             const { name, surname, email, password } = values;
                             await signUp(name, surname, email, password);
                         }

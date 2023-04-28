@@ -55,4 +55,24 @@ export class EcgService {
       return false;
     }
   }
+
+  public async getRRSeries(id: string, config: Config = {}): Promise<any> {
+    try {
+      const { page, limit } = config ?? {};
+      const _page = parseInt(page);
+      const _limit = parseInt(limit);
+      const filters = { ecg: id };
+      const measurements = await MeasurementModel.find(filters)
+        .skip((_page - 1) * _limit)
+        .limit(_limit)
+        .sort({
+          timestamp: 'asc',
+        });
+
+      return { measurements };
+    } catch (e: any) {
+      console.warn(e);
+      return [];
+    }
+  }
 }
