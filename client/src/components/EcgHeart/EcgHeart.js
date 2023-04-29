@@ -6,7 +6,6 @@ import zoomPlugin from "chartjs-plugin-zoom";
 
 ChartJS.register(...registerables, zoomPlugin);
 
-
 const EcgChart = ({ ecgData = [] }) => {
     const labels = ecgData.map(_data => _data.timestamp);
     const data = ecgData.map(_data => _data.sample);
@@ -42,6 +41,14 @@ const EcgChart = ({ ecgData = [] }) => {
                 data: data,
                 fill: false,
                 borderColor: "rgb(75, 192, 192)",
+                pointBackgroundColor: (context) => {
+                    const index = context.dataIndex;
+                    if (ecgData[index] && ecgData[index].isRR) {
+                        return 'red';
+                    } else {
+                        return "rgb(75, 192, 192)";
+                    }
+                },
                 tension: 0.1,
             },
         ],

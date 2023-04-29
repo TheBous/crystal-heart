@@ -21,7 +21,8 @@ const ECG = () => {
                 method: 'GET',
                 includeCredentials: true,
             })
-            const { total, measurements } = response.data;
+            const { total, measurements, smoothedValues } = response.data;
+            console.warn(smoothedValues);
             setTotal(total);
             setMeasurements(measurements);
         };
