@@ -8,8 +8,7 @@ ValidateEnv();
 
 try {
   const app = new App([new UserRoute(), new AuthRoute(), new EcgRoute()]);
-
   app.listen();
 } catch (e) {
-  console.error(e);
+  console.error(`Error here ${e}`);
 }
