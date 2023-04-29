@@ -56,7 +56,7 @@ export class EcgService {
         ecg: flattenedEcg.map(item => item.sample),
       };
 
-      const { data: { rr: rrPeaksIndexes } = {} } = await axios.post('http://127.0.0.1:5000/rr', body);
+      const { data: { rr: rrPeaksIndexes, bpm } = {} } = await axios.post('http://127.0.0.1:5000/rr', body);
 
       rrPeaksIndexes.forEach(index => {
         if (!!flattenedEcg[index]) {
@@ -67,7 +67,7 @@ export class EcgService {
       const rrDistancesMs = rrPeaksIndexes.slice(1).map((index, i) => (index - rrPeaksIndexes[i]) * (1000 / frequency));
       const totalElements = await MeasurementModel.countDocuments(filters);
 
-      return { measurements: flattenedEcg, total: totalElements, rrDistancesMs };
+      return { measurements: flattenedEcg, total: totalElements, rrDistancesMs, bpm };
     } catch (e: any) {
       console.error(e);
       return [];

@@ -14,6 +14,7 @@ const ECG = () => {
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
     const [rrDistance, setRRDistance] = useState([]);
+    const [bpm, setBpm] = useState([]);
 
     const handleChange = (_, value) => setPage(value);
 
@@ -23,10 +24,11 @@ const ECG = () => {
                 method: 'GET',
                 includeCredentials: true,
             })
-            const { total, measurements, rrDistancesMs } = response.data;
+            const { total, measurements, rrDistancesMs, bpm: _bpm } = response.data;
             setTotal(total);
             setMeasurements(measurements);
             setRRDistance(rrDistancesMs);
+            setBpm(_bpm);
         };
         fetchECG();
     }, [page]);
@@ -38,6 +40,9 @@ const ECG = () => {
             </Box>
             <Box sx={{ p: 2 }}>
                 <RR rrDistancesMs={rrDistance} />
+            </Box>
+            <Box sx={{ p: 2 }}>
+                <RR rrDistancesMs={bpm} />
             </Box>
             <Stack spacing={2}>
                 <Pagination color="primary" count={total / limit} variant="outlined" onChange={handleChange} />
