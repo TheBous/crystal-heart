@@ -3,6 +3,7 @@ import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 
 import EcgChart from "../../components/EcgHeart/EcgHeart";
+import RR from "../../components/RR/RR";
 import internalFetch from 'utils/fetch';
 import { Box } from "@mui/system";
 
@@ -12,6 +13,7 @@ const ECG = () => {
     const [measurements, setMeasurements] = useState([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
+    const [rrDistance, setRRDistance] = useState([]);
 
     const handleChange = (_, value) => setPage(value);
 
@@ -21,10 +23,10 @@ const ECG = () => {
                 method: 'GET',
                 includeCredentials: true,
             })
-            const { total, measurements, smoothedValues } = response.data;
-            console.warn(smoothedValues);
+            const { total, measurements, rrDistancesMs } = response.data;
             setTotal(total);
             setMeasurements(measurements);
+            setRRDistance(rrDistancesMs);
         };
         fetchECG();
     }, [page]);
@@ -33,6 +35,9 @@ const ECG = () => {
         <div>
             <Box sx={{ p: 2 }}>
                 <EcgChart ecgData={measurements} />
+            </Box>
+            <Box sx={{ p: 2 }}>
+                <RR rrDistancesMs={rrDistance} />
             </Box>
             <Stack spacing={2}>
                 <Pagination color="primary" count={total / limit} variant="outlined" onChange={handleChange} />

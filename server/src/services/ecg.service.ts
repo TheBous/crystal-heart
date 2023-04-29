@@ -73,8 +73,10 @@ export class EcgService {
         }
       });
 
+      const rrDistancesMs = rrPeaksIndexes.slice(1).map((index, i) => (index - rrPeaksIndexes[i]) * (1000 / frequency));
       const totalElements = await MeasurementModel.countDocuments(filters);
-      return { measurements: flattenedEcg, total: totalElements };
+
+      return { measurements: flattenedEcg, total: totalElements, rrDistancesMs };
     } catch (e: any) {
       console.warn(e);
       return [];
