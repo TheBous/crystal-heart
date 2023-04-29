@@ -56,7 +56,7 @@ export class EcgService {
         ecg: flattenedEcg.map(item => item.sample),
       };
 
-      const { data: { rr: rrPeaksIndexes, bpm } = {} } = await axios.post('http://127.0.0.1:5000/rr', body);
+      const { data: { rr: rrPeaksIndexes, bpm } = {} } = await axios.post(`${process.env.PYTHON_SERVER}/rr`, body);
 
       rrPeaksIndexes.forEach(index => {
         if (!!flattenedEcg[index]) {
@@ -131,7 +131,7 @@ export class EcgService {
         ecg: flattenedEcg.map(item => item.sample),
       };
 
-      const { data: { rr: rrPeaksIndexes } = {} } = await axios.post('http://127.0.0.1:5000/rr', body);
+      const { data: { rr: rrPeaksIndexes } = {} } = await axios.post(`${process.env.PYTHON_SERVER}/rr`, body);
 
       rrPeaksIndexes.forEach(index => (flattenedEcg[index].isRR = true));
 
