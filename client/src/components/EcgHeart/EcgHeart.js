@@ -3,40 +3,14 @@ import { memo } from "react";
 import { Line } from "react-chartjs-2";
 import { registerables, Chart as ChartJS } from "chart.js";
 import zoomPlugin from "chartjs-plugin-zoom";
-import { addMilliseconds, differenceInMilliseconds } from "date-fns";
 
 ChartJS.register(...registerables, zoomPlugin);
 
-const frequency = 125;
-const measuresInASecond = 1 / frequency;
-const msMeasuresInASecond = measuresInASecond * 1000;
-
 
 const EcgChart = ({ ecgData = [] }) => {
-    const labels = ecgData.map((data) => {
-        return data.samples.map((_, index) => {
-            let timestamp = data.timestamp;
-            if (index !== 0) {
-                const time = index * msMeasuresInASecond;
-                timestamp = addMilliseconds(new Date(data.timestamp), time);
-            }
+    const labels = ecgData.map(_data => _data.timestamp);
+    const data = ecgData.map(_data => _data.sample);
 
-            const printedTimestamp = differenceInMilliseconds(new Date(timestamp), new Date(ecgData[0].timestamp));
-            return printedTimestamp;
-        });
-    });
-
-    const data = ecgData
-        .map((data) => {
-            return data.samples;
-        })
-        .flat();
-
-    const RRPeaks = data.filter(_data => _data > 5000);
-
-    const fromHighToLowFn = (a, b) => b - a;
-    const orderedNumbers = [...data].sort(fromHighToLowFn);
-    console.warn(RRPeaks.length, orderedNumbers);
     const options = {
         responsive: true,
         plugins: {

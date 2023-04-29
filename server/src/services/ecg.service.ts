@@ -2,6 +2,8 @@ import { Service } from 'typedi';
 import { addMilliseconds, differenceInMilliseconds } from 'date-fns';
 import FakeEcg from '../json/fake.json';
 import { MeasurementModel } from '@/models/measurement.model';
+import LPF from 'lpf';
+
 import { EcgModel } from '@/models/ecg.model';
 
 type Config = {
@@ -26,8 +28,31 @@ export class EcgService {
         .sort({
           timestamp: 'asc',
         });
+
+      const frequency = 125;
+      const measuresInASecond = 1 / frequency;
+      const msMeasuresInASecond = measuresInASecond * 1000;
+
+      const formattedEcg = measurements.map(measurement => {
+        return (measurement as any).samples.map((sample, index) => {
+          let timestamp = (measurement as any).timestamp;
+          if (index !== 0) {
+            const time = index * msMeasuresInASecond;
+            timestamp = addMilliseconds(new Date((measurement as any).timestamp), time);
+          }
+
+          const printedTimestamp = differenceInMilliseconds(new Date(timestamp), new Date((measurements[0] as any).timestamp));
+          return {
+            sample,
+            timestamp: printedTimestamp,
+          };
+        });
+      });
+
+      const flattenedEcg = formattedEcg.flat();
+
       const totalElements = await MeasurementModel.countDocuments(filters);
-      return { measurements, total: totalElements };
+      return { measurements: flattenedEcg, total: totalElements };
     } catch (e: any) {
       console.warn(e);
       return [];
@@ -85,7 +110,8 @@ export class EcgService {
       });
 
       const flattenedEcg = formattedEcg.flat();
-      console.warn(flattenedEcg);
+      const smoothedValues = LPF.smoothArray(flattenedEcg.map(ecg => ecg.sample));
+      console.warn(flattenedEcg, smoothedValues);
       return { ecg: flattenedEcg };
     } catch (e: any) {
       console.warn(e);
