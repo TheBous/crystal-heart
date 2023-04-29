@@ -22,11 +22,9 @@ const EcgChart = ({ ecgData = [] }) => {
             }
 
             const printedTimestamp = differenceInMilliseconds(new Date(timestamp), new Date(ecgData[0].timestamp));
-            // return new Date(timestamp).toISOString().substring(17, 22);
             return printedTimestamp;
         });
     });
-    window.labels = labels;
 
     const data = ecgData
         .map((data) => {
@@ -34,6 +32,11 @@ const EcgChart = ({ ecgData = [] }) => {
         })
         .flat();
 
+    const RRPeaks = data.filter(_data => _data > 5000);
+
+    const fromHighToLowFn = (a, b) => b - a;
+    const orderedNumbers = [...data].sort(fromHighToLowFn);
+    console.warn(RRPeaks.length, orderedNumbers);
     const options = {
         responsive: true,
         plugins: {

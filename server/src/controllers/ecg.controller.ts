@@ -38,4 +38,14 @@ export class EcgController {
       next(error);
     }
   };
+
+  public getRR = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.query;
+      const data = await this.ecg.getRR(id as string);
+      res.status(200).json({ data, message: 'Get RR intervals' });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
