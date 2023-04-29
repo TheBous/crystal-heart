@@ -135,7 +135,10 @@ export class EcgService {
 
       const rrDistancesMs = rrPeaksIndexes.slice(1).map((index, i) => (index - rrPeaksIndexes[i]) * (1000 / frequency));
 
-      return { rr: rrDistancesMs, bpm };
+      const lowestBpmValues = [...bpm].sort((a, b) => a - b).slice(0, 5);
+      const highestRRValues = [...rrDistancesMs].sort((a, b) => b - a).slice(0, 5);
+
+      return { rr: rrDistancesMs, bpm, lowestBpmValues, highestRRValues };
     } catch (e: any) {
       console.warn(e);
       return [];

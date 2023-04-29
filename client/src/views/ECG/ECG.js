@@ -17,6 +17,8 @@ const ECG = () => {
     const [bpm, setBpm] = useState([]);
     const [rrTotDistance, setRRTotDistance] = useState([]);
     const [totBpm, setTotBpm] = useState([]);
+    const [lowestBpmValues, setLowestBpmValues] = useState([]);
+    const [highestRRValues, setHighestRRValues] = useState([]);
 
     const handleChange = (_, value) => setPage(value);
 
@@ -32,22 +34,29 @@ const ECG = () => {
                 includeCredentials: true,
             })
             const { total, measurements, rrDistancesMs, bpm: _bpm } = response.data;
-            const { rr: totR, bpm: totB } = response2.data;
+            const { rr: totR, bpm: totB, lowestBpmValues: _lowestBpmValues, highestRRValues: _highestRRValues } = response2.data;
             setTotBpm(totB);
             setRRTotDistance(totR);
             setTotal(total);
             setMeasurements(measurements);
             setRRDistance(rrDistancesMs);
             setBpm(_bpm);
+            setLowestBpmValues(_lowestBpmValues);
+            setHighestRRValues(_highestRRValues);
         };
         fetchECG();
     }, [page]);
 
     return (
         <div>
+            <Box sx={{ p: 2 }}>Min 5 measures BPM: {lowestBpmValues.join(",")}</Box>
+            <Box sx={{ p: 2 }}>Max 5 measures RR interval: {highestRRValues.join(",")}</Box>
             <Box sx={{ p: 2 }}>
                 <EcgChart ecgData={measurements} />
             </Box>
+            <Stack spacing={2}>
+                <Pagination color="primary" count={total / limit} variant="outlined" onChange={handleChange} />
+            </Stack>
             <Box sx={{ p: 2 }}>
                 <RR rrDistancesMs={rrDistance} />
             </Box>
@@ -60,9 +69,6 @@ const ECG = () => {
             <Box sx={{ p: 2 }}>
                 <RR rrDistancesMs={totBpm} />
             </Box>
-            <Stack spacing={2}>
-                <Pagination color="primary" count={total / limit} variant="outlined" onChange={handleChange} />
-            </Stack>
         </div>
     );
 };
