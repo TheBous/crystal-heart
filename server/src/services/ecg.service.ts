@@ -97,7 +97,7 @@ export class EcgService {
     }
   }
 
-  public async getRR(id: string): Promise<any> {
+  public async getStats(id: string): Promise<any> {
     try {
       const filters = { ecg: id };
       const ecgs = await MeasurementModel.find(filters).sort({
@@ -131,11 +131,11 @@ export class EcgService {
         ecg: flattenedEcg.map(item => item.sample),
       };
 
-      const { data: { rr: rrPeaksIndexes } = {} } = await axios.post(`${process.env.PYTHON_SERVER}/rr`, body);
+      const { data: { rr: rrPeaksIndexes, bpm } = {} } = await axios.post(`${process.env.PYTHON_SERVER}/rr`, body);
 
-      rrPeaksIndexes.forEach(index => (flattenedEcg[index].isRR = true));
+      const rrDistancesMs = rrPeaksIndexes.slice(1).map((index, i) => (index - rrPeaksIndexes[i]) * (1000 / frequency));
 
-      return { ecg: flattenedEcg };
+      return { rr: rrDistancesMs, bpm };
     } catch (e: any) {
       console.warn(e);
       return [];

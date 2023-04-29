@@ -39,11 +39,11 @@ export class EcgController {
     }
   };
 
-  public getRR = async (req: Request, res: Response, next: NextFunction) => {
+  public getStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.query;
-      const data = await this.ecg.getRR(id as string);
-      res.status(200).json({ data, message: 'Get RR intervals' });
+      const data = await this.ecg.getStats(id as string);
+      res.status(200).json({ data, message: 'Get stats' });
     } catch (error) {
       next(error);
     }
