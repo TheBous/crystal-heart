@@ -2,12 +2,13 @@ import { memo, useEffect, useState } from "react";
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 
+import Loader from "../../ui-component/Loader";
 import EcgChart from "../../components/EcgHeart/EcgHeart";
 import RR from "../../components/RR/RR";
 import internalFetch from 'utils/fetch';
 import { Box } from "@mui/system";
 
-const limit = 100;
+const limit = 700;
 
 const ECG = () => {
     const [measurements, setMeasurements] = useState([]);
@@ -19,30 +20,54 @@ const ECG = () => {
     const [totBpm, setTotBpm] = useState([]);
     const [lowestBpmValues, setLowestBpmValues] = useState([]);
     const [highestRRValues, setHighestRRValues] = useState([]);
+    const [isEcgLoading, setIsEcgLoading] = useState(false);
+    const [isStatsLoading, setIsStatsLoading] = useState(false);
 
     const handleChange = (_, value) => setPage(value);
 
     useEffect(() => {
-        const fetchECG = async () => {
-            const response = await internalFetch(`ecg/measurements?id=644512ae1747a0ad16e54cd7&page=${page}&limit=${limit}`, {
-                method: 'GET',
-                includeCredentials: true,
-            })
+        const fetchStats = async () => {
+            try {
+                setIsEcgLoading(true);
+                const response2 = await internalFetch(`ecg/stats?id=6450032690c90387d5f24e34`, {
+                    method: 'GET',
+                    includeCredentials: true,
+                })
+                const { rr: totR, bpm: totB, lowestBpmValues: _lowestBpmValues, highestRRValues: _highestRRValues } = response2.data;
+                setTotBpm(totB);
+                setRRTotDistance(totR);
+                setLowestBpmValues(_lowestBpmValues);
+                setHighestRRValues(_highestRRValues);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setIsEcgLoading(false);
+            }
+        }
 
-            const response2 = await internalFetch(`ecg/stats?id=644512ae1747a0ad16e54cd7`, {
-                method: 'GET',
-                includeCredentials: true,
-            })
-            const { total, measurements, rrDistancesMs, bpm: _bpm } = response.data;
-            const { rr: totR, bpm: totB, lowestBpmValues: _lowestBpmValues, highestRRValues: _highestRRValues } = response2.data;
-            setTotBpm(totB);
-            setRRTotDistance(totR);
-            setTotal(total);
-            setMeasurements(measurements);
-            setRRDistance(rrDistancesMs);
-            setBpm(_bpm);
-            setLowestBpmValues(_lowestBpmValues);
-            setHighestRRValues(_highestRRValues);
+        fetchStats();
+    }, []);
+
+    useEffect(() => {
+        const fetchECG = async () => {
+            try {
+                setIsStatsLoading(true)
+                const response = await internalFetch(`ecg/measurements?id=6450032690c90387d5f24e34&page=${page}&limit=${limit}`, {
+                    method: 'GET',
+                    includeCredentials: true,
+                })
+
+                const { total, measurements, rrDistancesMs, bpm: _bpm } = response.data;
+                setTotal(total);
+                setMeasurements(measurements);
+                setRRDistance(rrDistancesMs);
+                setBpm(_bpm);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setIsStatsLoading(false);
+            }
+
         };
         fetchECG();
     }, [page]);
@@ -69,6 +94,7 @@ const ECG = () => {
             <Box sx={{ p: 2 }}>
                 <RR rrDistancesMs={totBpm} />
             </Box>
+            {(isEcgLoading || isStatsLoading) && <Loader />}
         </div>
     );
 };

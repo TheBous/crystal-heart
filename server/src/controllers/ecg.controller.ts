@@ -22,7 +22,6 @@ export class EcgController {
       console.warn(req.user);
       const userId: string = req.user._id;
       const ecgSave: any = await this.ecg.uploadEcg(userId);
-      console.warn(ecgSave);
       res.status(200).json({ data: ecgSave, message: 'Ecg saved' });
     } catch (error) {
       next(error);
@@ -34,6 +33,18 @@ export class EcgController {
       const { id, page, limit } = req.query;
       const data = await this.ecg.getEcg(id as string, { page: page as string, limit: limit as string });
       res.status(200).json({ data, message: 'Ecg saved' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getUserEcgs = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { page, limit } = req.query;
+      const userId: string = req.user._id;
+
+      const data = await this.ecg.getUserEcgs(userId, { page: page as string, limit: limit as string });
+      res.status(200).json({ data, message: 'Get User ECGs' });
     } catch (error) {
       next(error);
     }

@@ -1,6 +1,10 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
 import { Line } from 'react-chartjs-2';
+import { registerables, Chart as ChartJS } from "chart.js";
+import zoomPlugin from "chartjs-plugin-zoom";
+
+ChartJS.register(...registerables, zoomPlugin);
 
 const RR = ({ rrDistancesMs = [] }) => {
   // Dati del grafico
@@ -16,6 +20,16 @@ const RR = ({ rrDistancesMs = [] }) => {
 
   // Opzioni del grafico
   const options = {
+    zoom: {
+      zoom: {
+        wheel: {
+          enabled: true, // SET SCROOL ZOOM TO TRUE
+        },
+      },
+      pan: {
+        enabled: true,
+      },
+    },
     scales: {
       y: {
         title: {

@@ -1,7 +1,7 @@
 import { Service } from 'typedi';
 import { addMilliseconds, differenceInMilliseconds } from 'date-fns';
 import axios from 'axios';
-import FakeEcg from '../json/fake.json';
+import FakeEcg from '../json/fake-4.json';
 import { MeasurementModel } from '@/models/measurement.model';
 
 import { EcgModel } from '@/models/ecg.model';
@@ -14,6 +14,22 @@ type Config = {
 export class EcgService {
   public async saveEcg(): Promise<void> {
     console.warn();
+  }
+
+  public async getUserEcgs(userId: string, config: Config = {}): Promise<any> {
+    const { page, limit } = config ?? {};
+    const _page = parseInt(page);
+    const _limit = parseInt(limit);
+    const filters = { user: userId };
+
+    const ecgs = await EcgModel.find(filters)
+      .skip((_page - 1) * _limit)
+      .limit(_limit)
+      .sort({
+        timestamp: 'asc',
+      });
+
+    return { ecgs };
   }
 
   public async getEcg(id: string, config: Config = {}): Promise<any> {
@@ -76,7 +92,7 @@ export class EcgService {
 
   public async uploadEcg(userId: any): Promise<boolean> {
     try {
-      const formattedEcg = FakeEcg.data.map((item: any) => {
+      const formattedEcg = (FakeEcg as any).data.map((item: any) => {
         return {
           timestamp: item.ecg.Timestamp,
           ecg: item.ecg.Samples,
@@ -126,14 +142,14 @@ export class EcgService {
 
       const flattenedEcg = formattedEcg.flat();
 
-      // call python service to retrieve rr peaks
+      // call python service to retrieve rr peaks and bpms
       const body = {
         ecg: flattenedEcg.map(item => item.sample),
       };
 
       const { data: { rr: rrPeaksIndexes, bpm } = {} } = await axios.post(`${process.env.PYTHON_SERVER}/rr`, body);
 
-      const rrDistancesMs = rrPeaksIndexes.slice(1).map((index, i) => (index - rrPeaksIndexes[i]) * (1000 / frequency));
+      const rrDistancesMs = rrPeaksIndexes.slice(1).map((rrPeaksIndex: number, i: number) => (rrPeaksIndex - rrPeaksIndexes[i]) * (1000 / frequency));
 
       const lowestBpmValues = [...bpm].sort((a, b) => a - b).slice(0, 5);
       const highestRRValues = [...rrDistancesMs].sort((a, b) => b - a).slice(0, 5);
