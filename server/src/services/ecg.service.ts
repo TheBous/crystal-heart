@@ -1,7 +1,7 @@
 import { Service } from 'typedi';
-import { addMilliseconds, differenceInMilliseconds } from 'date-fns';
+import { addMilliseconds, differenceInMilliseconds, differenceInSeconds } from 'date-fns';
 import axios from 'axios';
-import FakeEcg from '../json/fake-5.json';
+import FakeEcg from '../json/fake-3.json';
 import { MeasurementModel } from '@/models/measurement.model';
 
 import { EcgModel } from '@/models/ecg.model';
@@ -30,6 +30,29 @@ export class EcgService {
       });
 
     return { ecgs };
+  }
+
+  public async uploadEcg(userId: any): Promise<boolean> {
+    try {
+      const formattedEcg = (FakeEcg as any).data.map((item: any) => {
+        return {
+          timestamp: item.ecg.Timestamp,
+          ecg: item.ecg.Samples,
+        };
+      });
+      const ecg = await EcgModel.create({ date: new Date(), user: userId });
+      if (ecg) {
+        const { _id } = ecg;
+        for (const measurement of formattedEcg) {
+          await MeasurementModel.create({ ecg: _id, timestamp: measurement.timestamp, samples: measurement.ecg });
+        }
+      }
+
+      return true;
+    } catch (e: any) {
+      console.warn(e);
+      return false;
+    }
   }
 
   public async getEcg(id: string, config: Config = {}): Promise<any> {
@@ -70,6 +93,7 @@ export class EcgService {
       // call python service to retrieve rr peaks
       const body = {
         ecg: flattenedEcg.map(item => item.sample),
+        frequency,
       };
 
       const { data: { rr: rrPeaksIndexes, bpm } = {} } = await axios.post(`${process.env.PYTHON_SERVER}/rr`, body);
@@ -83,42 +107,30 @@ export class EcgService {
       const rrDistancesMs = rrPeaksIndexes.slice(1).map((index, i) => (index - rrPeaksIndexes[i]) * (1000 / frequency));
       const totalElements = await MeasurementModel.countDocuments(filters);
 
-      return { measurements: flattenedEcg, total: totalElements, rrDistancesMs, bpm };
+      return { measurements: flattenedEcg, total: totalElements, rrDistancesMs, bpm, frequency };
     } catch (e: any) {
       console.error(e);
       return [];
     }
   }
 
-  public async uploadEcg(userId: any): Promise<boolean> {
-    try {
-      const formattedEcg = (FakeEcg as any).data.map((item: any) => {
-        return {
-          timestamp: item.ecg.Timestamp,
-          ecg: item.ecg.Samples,
-        };
-      });
-      const ecg = await EcgModel.create({ date: new Date(), user: userId });
-      if (ecg) {
-        const { _id } = ecg;
-        for (const measurement of formattedEcg) {
-          await MeasurementModel.create({ ecg: _id, timestamp: measurement.timestamp, samples: measurement.ecg });
-        }
-      }
-
-      return true;
-    } catch (e: any) {
-      console.warn(e);
-      return false;
-    }
-  }
-
-  public async getStats(id: string): Promise<any> {
+  public async getStats(id: string, config: Config = {}): Promise<any> {
     try {
       const filters = { ecg: id };
-      const ecgs = await MeasurementModel.find(filters).sort({
-        timestamp: 'asc',
-      });
+      const { page, limit } = config ?? {};
+      const _page = parseInt(page);
+      const _limit = parseInt(limit);
+      const ecgs = await MeasurementModel.find(filters)
+        .sort({
+          timestamp: 'asc',
+        })
+        .skip((_page - 1) * _limit)
+        .limit(_limit)
+        .sort({
+          timestamp: 'asc',
+        });
+
+      const totalElements = await MeasurementModel.countDocuments(filters);
 
       const frequency = 125;
       const measuresInASecond = 1 / frequency;
@@ -145,6 +157,7 @@ export class EcgService {
       // call python service to retrieve rr peaks and bpms
       const body = {
         ecg: flattenedEcg.map(item => item.sample),
+        frequency,
       };
 
       const { data: { rr: rrPeaksIndexes, bpm } = {} } = await axios.post(`${process.env.PYTHON_SERVER}/rr`, body);
@@ -154,7 +167,7 @@ export class EcgService {
       const lowestBpmValues = [...bpm].sort((a, b) => a - b).slice(0, 5);
       const highestRRValues = [...rrDistancesMs].sort((a, b) => b - a).slice(0, 5);
 
-      return { rr: rrDistancesMs, bpm, lowestBpmValues, highestRRValues };
+      return { rr: rrDistancesMs, bpm, lowestBpmValues, highestRRValues, frequency, total: totalElements };
     } catch (e: any) {
       console.warn(e);
       return [];

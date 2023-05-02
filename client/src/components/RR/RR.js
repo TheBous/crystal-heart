@@ -6,13 +6,14 @@ import zoomPlugin from "chartjs-plugin-zoom";
 
 ChartJS.register(...registerables, zoomPlugin);
 
-const RR = ({ rrDistancesMs = [] }) => {
+const RR = ({ rrDistancesMs = [], label = "" }) => {
+  console.warn(rrDistancesMs);
   // Dati del grafico
   const data = {
     labels: Array.from({ length: rrDistancesMs.length }, (_, i) => (i + 1).toString()),
     datasets: [
       {
-        label: 'Distanze RR (ms)',
+        label,
         data: rrDistancesMs,
       },
     ],
@@ -34,7 +35,7 @@ const RR = ({ rrDistancesMs = [] }) => {
       y: {
         title: {
           display: true,
-          text: 'Distanza RR (ms)',
+          text: label,
         },
       },
     },

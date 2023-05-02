@@ -16,43 +16,16 @@ const ECG = () => {
     const [page, setPage] = useState(1);
     const [rrDistance, setRRDistance] = useState([]);
     const [bpm, setBpm] = useState([]);
-    const [rrTotDistance, setRRTotDistance] = useState([]);
-    const [totBpm, setTotBpm] = useState([]);
-    const [lowestBpmValues, setLowestBpmValues] = useState([]);
-    const [highestRRValues, setHighestRRValues] = useState([]);
     const [isEcgLoading, setIsEcgLoading] = useState(false);
-    const [isStatsLoading, setIsStatsLoading] = useState(false);
 
     const handleChange = (_, value) => setPage(value);
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                setIsEcgLoading(true);
-                const response2 = await internalFetch(`ecg/stats?id=6450b4d8df6c7a6f39fb8800`, {
-                    method: 'GET',
-                    includeCredentials: true,
-                })
-                const { rr: totR, bpm: totB, lowestBpmValues: _lowestBpmValues, highestRRValues: _highestRRValues } = response2.data;
-                setTotBpm(totB);
-                setRRTotDistance(totR);
-                setLowestBpmValues(_lowestBpmValues);
-                setHighestRRValues(_highestRRValues);
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setIsEcgLoading(false);
-            }
-        }
-
-        fetchStats();
-    }, []);
 
     useEffect(() => {
         const fetchECG = async () => {
             try {
-                setIsStatsLoading(true)
-                const response = await internalFetch(`ecg/measurements?id=6450b4d8df6c7a6f39fb8800&page=${page}&limit=${limit}`, {
+                setIsEcgLoading(true)
+                const response = await internalFetch(`ecg/measurements?id=6450032690c90387d5f24e34&page=${page}&limit=${limit}`, {
                     method: 'GET',
                     includeCredentials: true,
                 })
@@ -65,7 +38,7 @@ const ECG = () => {
             } catch (e) {
                 console.error(e);
             } finally {
-                setIsStatsLoading(false);
+                setIsEcgLoading(false);
             }
 
         };
@@ -74,27 +47,19 @@ const ECG = () => {
 
     return (
         <div>
-            <Box sx={{ p: 2 }}>Min 5 measures BPM: {lowestBpmValues.join(",")}</Box>
-            <Box sx={{ p: 2 }}>Max 5 measures RR interval: {highestRRValues.join(",")}</Box>
             <Box sx={{ p: 2 }}>
                 <EcgChart ecgData={measurements} />
             </Box>
             <Stack spacing={2}>
-                <Pagination color="primary" count={total / limit} variant="outlined" onChange={handleChange} />
+                <Pagination color="primary" count={Math.ceil(total / limit)} variant="outlined" onChange={handleChange} />
             </Stack>
             <Box sx={{ p: 2 }}>
-                <RR rrDistancesMs={rrDistance} />
+                <RR label="RR" rrDistancesMs={rrDistance} />
             </Box>
             <Box sx={{ p: 2 }}>
-                <RR rrDistancesMs={bpm} />
+                <RR label="BPM" rrDistancesMs={bpm} />
             </Box>
-            <Box sx={{ p: 2 }}>
-                <RR rrDistancesMs={rrTotDistance} />
-            </Box>
-            <Box sx={{ p: 2 }}>
-                <RR rrDistancesMs={totBpm} />
-            </Box>
-            {(isEcgLoading || isStatsLoading) && <Loader />}
+            {(isEcgLoading) && <Loader />}
         </div>
     );
 };

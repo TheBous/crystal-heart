@@ -15,9 +15,12 @@ const UtilsShadow = Loadable(lazy(() => import('views/utilities/Shadow')));
 const UtilsMaterialIcons = Loadable(lazy(() => import('views/utilities/MaterialIcons')));
 const UtilsTablerIcons = Loadable(lazy(() => import('views/utilities/TablerIcons')));
 const ECG = Loadable(lazy(() => import('views/ECG/ECG')));
+const Stats = Loadable(lazy(() => import('views/Stats/Stats')));
 const Macronutrients = Loadable(lazy(() => import('views/macronutrients/Macronutrients')));
 
 const AuthDashboard = withAuth(DashboardDefault);
+const AuthECG = withAuth(ECG);
+const AuthStats = withAuth(Stats);
 
 // sample page routing
 const SamplePage = Loadable(lazy(() => import('views/sample-page')));
@@ -46,7 +49,14 @@ const MainRoutes = {
             path: 'ecg',
             element:
                 (
-                    <ECG />
+                    <AuthECG />
+                )
+        },
+        {
+            path: 'stats',
+            element:
+                (
+                    <AuthStats />
                 )
         },
         {

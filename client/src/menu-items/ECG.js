@@ -1,8 +1,8 @@
 // assets
-import { IconHeart, IconHelp } from '@tabler/icons';
+import { IconStatusChange, IconHeart, IconHelp } from '@tabler/icons';
 
 // constant
-const icons = { IconHeart, IconHelp };
+const icons = { IconStatusChange, IconHeart, IconHelp };
 
 // ==============================|| SAMPLE PAGE & DOCUMENTATION MENU ITEMS ||============================== //
 
@@ -16,6 +16,14 @@ const microNutrients = {
             type: 'item',
             url: '/ecg',
             icon: icons.IconHeart,
+            breadcrumbs: false
+        },
+        {
+            id: 'stats',
+            title: 'Stats',
+            type: 'item',
+            url: '/stats',
+            icon: icons.IconStatusChange,
             breadcrumbs: false
         }
     ]

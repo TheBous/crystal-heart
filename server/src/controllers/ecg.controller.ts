@@ -52,8 +52,8 @@ export class EcgController {
 
   public getStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id } = req.query;
-      const data = await this.ecg.getStats(id as string);
+      const { id, page, limit } = req.query;
+      const data = await this.ecg.getStats(id as string, { page: page as string, limit: limit as string });
       res.status(200).json({ data, message: 'Get stats' });
     } catch (error) {
       next(error);
