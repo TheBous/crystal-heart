@@ -14,6 +14,7 @@ import { dbConnection } from './database';
 import { Routes } from '@interfaces/routes.interface';
 import { ErrorMiddleware } from '@middlewares/error.middleware';
 import { logger, stream } from '@utils/logger';
+import { InfluxDB, Point } from '@influxdata/influxdb-client';
 
 export class App {
   public app: express.Application;
@@ -26,6 +27,7 @@ export class App {
     this.port = PORT || 3000;
 
     this.connectToDatabase();
+    this.connectInflux();
     this.initializeMiddlewares();
     this.initializeRoutes(routes);
     this.initializeSwagger();
@@ -52,6 +54,17 @@ export class App {
 
     set('strictQuery', false);
     await connect(dbConnection.url, dbConnection.options as any);
+  }
+
+  private async connectInflux() {
+    if (this.env !== 'production') {
+      set('debug', true);
+    }
+
+    const token = process.env.INFLUXDB_TOKEN;
+    const url = process.env.INFLUXDB_URL;
+
+    const client = new InfluxDB({ url, token });
   }
 
   private initializeMiddlewares() {

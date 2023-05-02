@@ -29,7 +29,7 @@ const ECG = () => {
         const fetchStats = async () => {
             try {
                 setIsEcgLoading(true);
-                const response2 = await internalFetch(`ecg/stats?id=6450032690c90387d5f24e34`, {
+                const response2 = await internalFetch(`ecg/stats?id=6450b4d8df6c7a6f39fb8800`, {
                     method: 'GET',
                     includeCredentials: true,
                 })
@@ -52,7 +52,7 @@ const ECG = () => {
         const fetchECG = async () => {
             try {
                 setIsStatsLoading(true)
-                const response = await internalFetch(`ecg/measurements?id=6450032690c90387d5f24e34&page=${page}&limit=${limit}`, {
+                const response = await internalFetch(`ecg/measurements?id=6450b4d8df6c7a6f39fb8800&page=${page}&limit=${limit}`, {
                     method: 'GET',
                     includeCredentials: true,
                 })

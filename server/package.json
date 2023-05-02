@@ -16,6 +16,7 @@
     "deploy:dev": "pm2 start ecosystem.config.js --only dev"
   },
   "dependencies": {
+    "@influxdata/influxdb-client": "^1.33.2",
     "axios": "^1.4.0",
     "bcrypt": "^5.0.1",
     "class-transformer": "^0.5.1",

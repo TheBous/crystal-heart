@@ -1,7 +1,7 @@
 import { Service } from 'typedi';
 import { addMilliseconds, differenceInMilliseconds } from 'date-fns';
 import axios from 'axios';
-import FakeEcg from '../json/fake-4.json';
+import FakeEcg from '../json/fake-5.json';
 import { MeasurementModel } from '@/models/measurement.model';
 
 import { EcgModel } from '@/models/ecg.model';
