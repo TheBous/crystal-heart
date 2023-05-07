@@ -184,7 +184,6 @@ const FirebaseRegister = ({ ...others }) => {
                     } catch (err) {
                         console.error(err);
                         if (scriptedRef.current) {
-                            debugger;
                             setStatus({ success: false });
                             setErrors({ submit: err.message });
                             setSubmitting(false);

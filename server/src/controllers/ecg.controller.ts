@@ -6,10 +6,11 @@ import { RequestWithUser } from '@/interfaces/auth.interface';
 export class EcgController {
   public ecg = Container.get(EcgService);
 
-  public saveEcg = async (req: Request, res: Response, next: NextFunction) => {
+  public saveEcg = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
-      // const { prompt } = req.body;
-      const ecgSave: any = await this.ecg.saveEcg();
+      const { date, frequency } = req.body;
+      const userId: string = req.user._id;
+      const ecgSave: any = await this.ecg.saveEcg(userId, date);
       console.warn(ecgSave);
       res.status(200).json({ data: ecgSave, message: 'Ecg saved' });
     } catch (error) {
@@ -54,6 +55,16 @@ export class EcgController {
     try {
       const { id, page, limit } = req.query;
       const data = await this.ecg.getStats(id as string, { page: page as string, limit: limit as string });
+      res.status(200).json({ data, message: 'Get stats' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getInstantStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { page, limit } = req.query;
+      const data = await this.ecg.getInstantStats({ page: page as string, limit: limit as string });
       res.status(200).json({ data, message: 'Get stats' });
     } catch (error) {
       next(error);

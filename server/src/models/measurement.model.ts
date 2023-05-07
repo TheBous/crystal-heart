@@ -9,11 +9,14 @@ const MeasurementSchema: Schema = new Schema({
   },
   timestamp: {
     type: Date,
+    required: true,
   },
-  samples: {
-    type: Array,
-    of: Number,
-    default: [],
+  value: {
+    type: Number,
+    required: true,
+  },
+  isRR: {
+    type: Boolean,
   },
 });
 

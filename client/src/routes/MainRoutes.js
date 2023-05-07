@@ -15,11 +15,13 @@ const UtilsShadow = Loadable(lazy(() => import('views/utilities/Shadow')));
 const UtilsMaterialIcons = Loadable(lazy(() => import('views/utilities/MaterialIcons')));
 const UtilsTablerIcons = Loadable(lazy(() => import('views/utilities/TablerIcons')));
 const ECG = Loadable(lazy(() => import('views/ECG/ECG')));
+const AddECG = Loadable(lazy(() => import('views/AddECG/AddECG')));
 const Stats = Loadable(lazy(() => import('views/Stats/Stats')));
 const Macronutrients = Loadable(lazy(() => import('views/macronutrients/Macronutrients')));
 
 const AuthDashboard = withAuth(DashboardDefault);
 const AuthECG = withAuth(ECG);
+const AuthAddECG = withAuth(AddECG);
 const AuthStats = withAuth(Stats);
 
 // sample page routing
@@ -47,10 +49,20 @@ const MainRoutes = {
         },
         {
             path: 'ecg',
-            element:
-                (
-                    <AuthECG />
-                )
+            children: [
+                {
+                    path: '',
+                    element: (
+                        <AuthECG />
+                    )
+                },
+                {
+                    path: 'add',
+                    element: (
+                        <AuthAddECG />
+                    )
+                }
+            ]
         },
         {
             path: 'stats',

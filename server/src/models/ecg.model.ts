@@ -10,6 +10,9 @@ const EcgSchema: Schema = new Schema({
     required: true,
     ref: 'User',
   },
+  frequency: {
+    type: Number,
+  },
 });
 
 export const EcgModel = model<Ecg & Document>('Ecg', EcgSchema);

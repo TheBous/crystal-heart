@@ -1,9 +1,8 @@
 import { Service } from 'typedi';
-import { addMilliseconds, differenceInMilliseconds, differenceInSeconds } from 'date-fns';
+import { addMilliseconds, differenceInMilliseconds, parseISO } from 'date-fns';
 import axios from 'axios';
-import FakeEcg from '../json/fake-3.json';
+import FakeEcg from '../json/20230502T230934.json';
 import { MeasurementModel } from '@/models/measurement.model';
-
 import { EcgModel } from '@/models/ecg.model';
 
 type Config = {
@@ -12,8 +11,53 @@ type Config = {
 };
 @Service()
 export class EcgService {
-  public async saveEcg(): Promise<void> {
-    console.warn();
+  public async saveEcg(userId: string, date: string, frequency = 125): Promise<void> {
+    try {
+      const ecg = await EcgModel.create({ date: new Date(), user: userId });
+      if (!!ecg) {
+        const { _id: ecgId } = ecg;
+        const formattedECG = [];
+        console.time('format');
+        for (const [i, item] of (FakeEcg as any).data.entries()) {
+          for (const [j, sample] of item.ecg.Samples.entries()) {
+            let timestamp = null;
+            if (i === 0 && j === 0) timestamp = parseISO(date);
+            else timestamp = addMilliseconds(formattedECG?.[formattedECG?.length - 1]?.timestamp ?? 0, 1000 / frequency);
+            formattedECG.push({
+              ecg: ecgId,
+              value: sample,
+              timestamp,
+            });
+          }
+        }
+        console.timeEnd('format');
+
+        console.time('Python');
+        const body = {
+          ecg: formattedECG.map(ecgValue => ecgValue.value),
+          frequency,
+        };
+
+        const { data: { rr: rPeaksIndexes } = {} } = await axios.post(`${process.env.PYTHON_SERVER}/rr`, body);
+        console.timeEnd('Python');
+        console.time('isRR');
+        for (const rPeaksIndex of rPeaksIndexes) {
+          if (!!formattedECG[rPeaksIndex]) formattedECG[rPeaksIndex].isRR = true;
+        }
+        console.timeEnd('isRR');
+        console.time('insert');
+
+        const chunks = 100000;
+
+        for (let i = 0; i < formattedECG.length; i += chunks) {
+          await MeasurementModel.insertMany(formattedECG.slice(i, i + chunks), { ordered: false });
+        }
+
+        console.timeEnd('insert');
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   public async getUserEcgs(userId: string, config: Config = {}): Promise<any> {
@@ -120,57 +164,122 @@ export class EcgService {
       const { page, limit } = config ?? {};
       const _page = parseInt(page);
       const _limit = parseInt(limit);
-      const ecgs = await MeasurementModel.find(filters)
-        .sort({
-          timestamp: 'asc',
-        })
+      console.time('query');
+      const ecgMeasurements = await MeasurementModel.find(filters)
         .skip((_page - 1) * _limit)
         .limit(_limit)
         .sort({
           timestamp: 'asc',
         });
 
+      console.timeEnd('query');
+
       const totalElements = await MeasurementModel.countDocuments(filters);
 
-      const frequency = 125;
-      const measuresInASecond = 1 / frequency;
-      const msMeasuresInASecond = measuresInASecond * 1000;
-
-      const formattedEcg = ecgs.map(measurement => {
-        return (measurement as any).samples.map((sample, index) => {
-          let timestamp = (measurement as any).timestamp;
-          if (index !== 0) {
-            const time = index * msMeasuresInASecond;
-            timestamp = addMilliseconds(new Date((measurement as any).timestamp), time);
+      let lastRRPeakTimestamp = null;
+      // default normal bpm
+      let lowestBpmValue = { value: 60, timestamp: null };
+      // default normal rr interval
+      let highestRRInterval = { value: 800, timestamp: null };
+      const rrIntervalsBPM = ecgMeasurements.reduce(
+        (acc, ecgMeasurement) => {
+          const { timestamp, isRR } = ecgMeasurement.toObject();
+          if (!lastRRPeakTimestamp && isRR) lastRRPeakTimestamp = timestamp;
+          else {
+            if (isRR) {
+              const rrInterval = differenceInMilliseconds(timestamp, lastRRPeakTimestamp);
+              const bpm = (60 * 1000) / rrInterval;
+              const cuttedBpm = Math.round(bpm);
+              if (bpm < 40) {
+                console.warn();
+              }
+              acc['bpm'].push({ timestamp, value: cuttedBpm });
+              if (bpm < lowestBpmValue.value) lowestBpmValue = { value: cuttedBpm, timestamp };
+              if (rrInterval > highestRRInterval.value) highestRRInterval = { value: rrInterval, timestamp };
+              acc['rrIntervals'].push({ timestamp, value: rrInterval });
+              lastRRPeakTimestamp = timestamp;
+            }
           }
+          return acc;
+        },
+        { bpm: [], rrIntervals: [] },
+      );
 
-          const printedTimestamp = differenceInMilliseconds(new Date(timestamp), new Date((ecgs[0] as any).timestamp));
-          return {
-            sample,
-            timestamp: printedTimestamp,
-          };
-        });
-      });
+      return { bpm: rrIntervalsBPM.bpm, rrIntervals: rrIntervalsBPM.rrIntervals, lowestBpmValue, highestRRInterval, total: totalElements };
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
-      const flattenedEcg = formattedEcg.flat();
+  public async getInstantStats(config: Config = {}): Promise<any> {
+    try {
+      const { page, limit } = config ?? {};
+      const _page = parseInt(page);
+      const _limit = parseInt(limit);
 
-      // call python service to retrieve rr peaks and bpms
+      const frequency = 125;
+
+      const date = '2023-05-02T21:09:34Z';
+
+      const ecgMeasurements = (FakeEcg as any).data;
+
+      const formattedECG = [];
+      for (const [i, item] of ecgMeasurements.entries()) {
+        for (const [j, sample] of item.ecg.Samples.entries()) {
+          let timestamp = null;
+          if (i === 0 && j === 0) timestamp = parseISO(date);
+          else timestamp = addMilliseconds(formattedECG?.[formattedECG?.length - 1]?.timestamp ?? 0, 1000 / frequency);
+          formattedECG.push({
+            value: sample,
+            timestamp,
+          });
+        }
+      }
+
+      const totalElements = formattedECG.length;
+      const slicedElements = formattedECG.slice((_page - 1) * _limit, _page * _limit);
+
       const body = {
-        ecg: flattenedEcg.map(item => item.sample),
+        ecg: slicedElements.map(ecgValue => ecgValue.value),
         frequency,
       };
+      const { data: { rr: rPeaksIndexes } = {} } = await axios.post(`${process.env.PYTHON_SERVER}/rr`, body);
+      for (const rPeaksIndex of rPeaksIndexes) {
+        if (!!slicedElements[rPeaksIndex]) slicedElements[rPeaksIndex].isRR = true;
+      }
 
-      const { data: { rr: rrPeaksIndexes, bpm } = {} } = await axios.post(`${process.env.PYTHON_SERVER}/rr`, body);
+      let lastRRPeakTimestamp = null;
+      // default normal bpm
+      let lowestBpmValue = { value: 60, timestamp: null };
+      // default normal rr interval
+      let highestRRInterval = { value: 800, timestamp: null };
+      const rrIntervalsBPM = slicedElements.reduce(
+        (acc, ecgMeasurement) => {
+          const { timestamp, isRR } = ecgMeasurement;
+          if (!lastRRPeakTimestamp && isRR) lastRRPeakTimestamp = timestamp;
+          else {
+            if (isRR) {
+              const rrInterval = differenceInMilliseconds(timestamp, lastRRPeakTimestamp);
+              const bpm = (60 * 1000) / rrInterval;
+              const cuttedBpm = Math.round(bpm);
+              if (bpm < 40) {
+                console.warn();
+              }
+              acc['bpm'].push({ timestamp, value: cuttedBpm });
+              if (bpm < lowestBpmValue.value) lowestBpmValue = { value: cuttedBpm, timestamp };
+              if (rrInterval > highestRRInterval.value) highestRRInterval = { value: rrInterval, timestamp };
+              acc['rrIntervals'].push({ timestamp, value: rrInterval });
+              lastRRPeakTimestamp = timestamp;
+            }
+          }
+          return acc;
+        },
+        { bpm: [], rrIntervals: [] },
+      );
 
-      const rrDistancesMs = rrPeaksIndexes.slice(1).map((rrPeaksIndex: number, i: number) => (rrPeaksIndex - rrPeaksIndexes[i]) * (1000 / frequency));
-
-      const lowestBpmValues = [...bpm].sort((a, b) => a - b).slice(0, 5);
-      const highestRRValues = [...rrDistancesMs].sort((a, b) => b - a).slice(0, 5);
-
-      return { rr: rrDistancesMs, bpm, lowestBpmValues, highestRRValues, frequency, total: totalElements };
-    } catch (e: any) {
-      console.warn(e);
-      return [];
+      return { bpm: rrIntervalsBPM.bpm, rrIntervals: rrIntervalsBPM.rrIntervals, lowestBpmValue, highestRRInterval, total: totalElements };
+    } catch (e) {
+      console.error(e);
     }
   }
 }

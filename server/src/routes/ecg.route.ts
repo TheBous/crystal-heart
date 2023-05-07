@@ -18,5 +18,7 @@ export class EcgRoute implements Routes {
     this.router.get(`${this.path}/ecg`, AuthMiddleware, this.ecg.getUserEcgs);
     this.router.get(`${this.path}/measurements`, AuthMiddleware, this.ecg.getEcg);
     this.router.get(`${this.path}/stats`, AuthMiddleware, this.ecg.getStats);
+    this.router.get(`${this.path}/instant-stats`, AuthMiddleware, this.ecg.getInstantStats);
+    this.router.post(`${this.path}/save`, AuthMiddleware, this.ecg.saveEcg);
   }
 }

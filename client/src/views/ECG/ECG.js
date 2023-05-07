@@ -25,7 +25,7 @@ const ECG = () => {
         const fetchECG = async () => {
             try {
                 setIsEcgLoading(true)
-                const response = await internalFetch(`ecg/measurements?id=6450032690c90387d5f24e34&page=${page}&limit=${limit}`, {
+                const response = await internalFetch(`ecg/measurements?id=64466f9dc5f5162c52cdbbd8&page=${page}&limit=${limit}`, {
                     method: 'GET',
                     includeCredentials: true,
                 })

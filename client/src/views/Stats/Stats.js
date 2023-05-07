@@ -24,23 +24,22 @@ const Stats = () => {
         const fetchStats = async () => {
             try {
                 setIsStatsLoading(true);
-                const response2 = await internalFetch(`ecg/stats?id=6450032690c90387d5f24e34&page=${statsPage}&limit=${statsLimit}`, {
+                const response2 = await internalFetch(`ecg/instant-stats?id=6454b1565d7883909dd9cb5a&page=${statsPage}&limit=${statsLimit}`, {
                     method: 'GET',
                     includeCredentials: true,
                 })
                 const {
-                    rr: totR,
-                    bpm: totB,
-                    lowestBpmValues: _lowestBpmValues,
-                    highestRRValues: _highestRRValues,
-                    total
+                    rrIntervals: calculatedRRIntervals,
+                    bpm: calculatedBPM,
+                    lowestBpmValues: lowestBpmValue,
+                    highestRRValues: highestRRInterval,
+                    total,
                 } = response2.data;
-                debugger;
-                setTotBpm(totB);
-                setTotal(total);
-                setRRTotDistance(totR);
-                setLowestBpmValues(_lowestBpmValues);
-                setHighestRRValues(_highestRRValues);
+                setTotBpm(calculatedBPM);
+                setRRTotDistance(calculatedRRIntervals);
+                setLowestBpmValues(lowestBpmValue);
+                setHighestRRValues(highestRRInterval);
+                setTotal(total)
             } catch (e) {
                 console.error(e);
             } finally {
@@ -53,13 +52,13 @@ const Stats = () => {
 
     return (
         <div>
-            <Box sx={{ p: 2 }}>Min 5 measures BPM: {lowestBpmValues.join(",")}</Box>
-            <Box sx={{ p: 2 }}>Max 5 measures RR interval: {highestRRValues.join(",")}</Box>
+            <Box sx={{ p: 2 }}>Min 5 measures BPM: {lowestBpmValues?.value?.join(",")}</Box>
+            <Box sx={{ p: 2 }}>Max 5 measures RR interval: {highestRRValues?.value?.join(",")}</Box>
             <Box sx={{ p: 2 }}>
-                <RR label="RR" rrDistancesMs={rrTotDistance} />
+                <RR label="RR" page={statsPage} rrDistancesMs={rrTotDistance} />
             </Box>
             <Box sx={{ p: 2 }}>
-                <RR label="BPM" rrDistancesMs={totBpm} />
+                <RR label="BPM" page={statsPage} rrDistancesMs={totBpm} />
             </Box>
             <Stack spacing={2}>
                 <Pagination color="primary" count={Math.ceil(total / statsLimit)} variant="outlined" onChange={handleStatsPageChange} />
