@@ -6,18 +6,23 @@ import Loader from "../../ui-component/Loader";
 import RR from "../../components/RR/RR";
 import internalFetch from 'utils/fetch';
 import { Box } from "@mui/system";
+import { useSearchParams } from "react-router-dom";
 
-const statsLimit = 50_000;
+
+const statsLimit = 800_000;
 
 const Stats = () => {
     const [total, setTotal] = useState(0);
-    const [statsPage, setStatsPage] = useState(1);
     const [rrTotDistance, setRRTotDistance] = useState([]);
     const [totBpm, setTotBpm] = useState([]);
     const [lowestBpmValues, setLowestBpmValues] = useState([]);
     const [highestRRValues, setHighestRRValues] = useState([]);
     const [isStatsLoading, setIsStatsLoading] = useState(false);
+    const [searchParams] = useSearchParams();
+    const page = searchParams.get("page");
+    const [statsPage, setStatsPage] = useState(page ?? 1);
 
+    console.warn(page);
     const handleStatsPageChange = (_, value) => setStatsPage(value);
 
     useEffect(() => {
@@ -61,7 +66,7 @@ const Stats = () => {
                 <RR label="BPM" page={statsPage} rrDistancesMs={totBpm} />
             </Box>
             <Stack spacing={2}>
-                <Pagination color="primary" count={Math.ceil(total / statsLimit)} variant="outlined" onChange={handleStatsPageChange} />
+                <Pagination color="primary" count={Math.ceil(total / statsLimit)} defaultPage={statsPage} variant="outlined" onChange={handleStatsPageChange} />
             </Stack>
             {(isStatsLoading) && <Loader />}
         </div>
